@@ -4,11 +4,19 @@ A lightweight [anywidget](https://anywidget.dev/)-based IPython widget that rend
 
 Works in **VS Code**, **JupyterLab**, and **classic Jupyter notebooks** — no extra frontend build step required.
 
-## Dependencies
+## Installation
 
-- [anywidget](https://pypi.org/project/anywidget/)
-- [numpy](https://pypi.org/project/numpy/)
-- [traitlets](https://pypi.org/project/traitlets/) (comes with ipywidgets)
+```bash
+pip install jswidget
+```
+
+Or install from source in development mode:
+
+```bash
+git clone https://github.com/DannyRuijters/JSWidget.git
+cd JSWidget
+pip install -e .
+```
 
 ## Quick Start
 

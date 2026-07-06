@@ -1,17 +1,17 @@
 """
 Custom DOMWidget that renders arbitrary JavaScript and passes data
-(including binary buffers for mesh data) over the ipywidgets comm API.
+(including user-defined binary buffers) over the ipywidgets comm API.
 
 Uses anywidget for reliable rendering in VS Code, JupyterLab, and classic notebooks.
 No external dependencies beyond anywidget and numpy.
 
 Usage:
-    from jswidget_anywidget import JSWidget
+    from jswidget import JSWidget
     import numpy as np
 
     w = JSWidget(width=800, height=600)
 
-    # Set binary buffers (mesh data)
+    # Set binary buffers (any name, created dynamically)
     vertices = np.array([[0,0,0],[1,0,0],[0,1,0]], dtype=np.float32)
     indices = np.array([0,1,2], dtype=np.uint32)
     w.set_buffers(vertices=vertices, normals=normals, indices=indices)
@@ -189,13 +189,8 @@ class JSWidget(anywidget.AnyWidget):
     width = traitlets.Int(800).tag(sync=True)
     height = traitlets.Int(600).tag(sync=True)
 
-    # Pre-defined binary buffer traitlets
-    _buf_vertices = traitlets.Bytes(b'').tag(sync=True)
-    _buf_normals = traitlets.Bytes(b'').tag(sync=True)
-    _buf_indices = traitlets.Bytes(b'').tag(sync=True)
-    _buf_data = traitlets.Bytes(b'').tag(sync=True)
-
     # Metadata about binary buffers (triggers onBuffers callback in JS)
+    # Binary buffer traits (_buf_<name>) are created dynamically by set_buffers().
     _buffers_metadata = traitlets.List([]).tag(sync=True)
 
     def set_buffers(self, **named_buffers):
