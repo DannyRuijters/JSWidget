@@ -106,6 +106,7 @@ function render({ model, el }) {
         const _bufferCallbacks = [];
         function onData(fn) { _dataCallbacks.push(fn); }
         function onBuffers(fn) { _bufferCallbacks.push(fn); }
+        function sendMessage(message, buffers) { model.send(message, buffers); }
 
         // Wire up model change events to callbacks
         function _onDataChange() {
@@ -126,8 +127,8 @@ function render({ model, el }) {
         };
 
         try {
-            const fn = new Function('el', 'data', 'getBuffer', 'opts', 'setState', 'getState', 'onData', 'onBuffers', code);
-            fn(container, currentData, getBuffer, opts, setState, getState, onData, onBuffers);
+            const fn = new Function('el', 'data', 'getBuffer', 'opts', 'setState', 'getState', 'onData', 'onBuffers', 'sendMessage', code);
+            fn(container, currentData, getBuffer, opts, setState, getState, onData, onBuffers, sendMessage);
         } catch(e) {
             const errDiv = document.createElement('pre');
             errDiv.style.color = 'red';
