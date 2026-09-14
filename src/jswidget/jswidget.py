@@ -109,7 +109,9 @@ function render({ model, el }) {
         function sendMessage(message, buffers) { model.send(message, buffers); }
 
         // Wire up model change events to callbacks
+        let _applyingUpdate = false;
         function _onDataChange() {
+            if (_applyingUpdate) return;
             currentData = model.get('data') || {};
             _dataCallbacks.forEach(fn => fn(currentData));
         }
@@ -117,13 +119,24 @@ function render({ model, el }) {
             const meta = model.get('_buffers_metadata') || [];
             _bufferCallbacks.forEach(fn => fn(meta));
         }
+        // Partial updates from update_data(): only the changed keys cross the comm
+        function _onCustomMessage(msg) {
+            if (!msg || !msg.jsw_data_update) return;
+            currentData = Object.assign({}, currentData, msg.jsw_data_update);
+            // Keep the frontend model in step without save_changes(), so nothing is echoed back
+            _applyingUpdate = true;
+            try { model.set('data', currentData); } finally { _applyingUpdate = false; }
+            _dataCallbacks.forEach(fn => fn(currentData));
+        }
         model.on('change:data', _onDataChange);
         model.on('change:_buffers_metadata', _onBuffersChange);
+        model.on('msg:custom', _onCustomMessage);
 
         // Register cleanup to remove listeners
         cleanupFn = () => {
             model.off('change:data', _onDataChange);
             model.off('change:_buffers_metadata', _onBuffersChange);
+            model.off('msg:custom', _onCustomMessage);
         };
 
         try {
@@ -223,6 +236,22 @@ class JSWidget(anywidget.AnyWidget):
     def send_data(self, data_dict):
         """Update the data dict and push to JavaScript."""
         self.data = data_dict
+
+    def update_data(self, partial_dict=None, **kwargs):
+        """Merge keys into the data dict, sending only those keys to JavaScript.
+
+        Use instead of send_data() when the data dict holds large entries that have
+        not changed, such as image or geometry payloads.
+
+        Example:
+            w.update_data(window={'contrast': 1.2, 'brightness': 0.1})
+        """
+        partial = dict(partial_dict or {}, **kwargs)
+        if not partial:
+            return
+        # Mutating in place deliberately skips the traitlet sync of the whole dict
+        self.data.update(partial)
+        self.send({'jsw_data_update': partial})
 
     def execute(self, js_code):
         """Update the JavaScript code and re-render."""

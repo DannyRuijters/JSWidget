@@ -18,4 +18,4 @@ Usage:
 from jswidget.jswidget import JSWidget
 
 __all__ = ["JSWidget"]
-__version__ = "0.1.0"
+__version__ = "0.1.1"
